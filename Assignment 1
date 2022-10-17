@@ -5,13 +5,17 @@ from netmiko import (
 )
 import sqlite3
 import threading
+import getpass
 
-def typeVerification(sshRouterConfig,telnetRouterConfig):
+def typeVerification(routerConfig):
     #user input for connection type
     connectionType = input("Do you want a secure connection? Y/N")
-
+    Config["password"] = getpass.getpass("Input password: ")
+    Config["secret"] = getpass.getpass("Input secret: ")
     #ssh connection
     if connectionType.upper()=='Y':
+        Config["port"] = 22
+
         #connects to router
         sshRouterConnect = ConnectHandler(**sshRouterConfig)
         #enable mode
@@ -57,21 +61,12 @@ def db(tables):
 
 if __name__ == "__main__":
     #router connection parameters
-    sshRouterConfig = {
-        'device_type': 'cisco_ios',
-        'host': '192.168.1.1',
-        'username': 'admin',
-        'password': 'password',
-        'port': 22,
-        'secret': 'cisco',
-    }
-
-    telnetRouterConfig = {
+    routerConfig = {
         'device_type': 'cisco_ios_telnet',
         'host': '192.168.1.1',
         'username': 'admin',
-        'password': 'password',
-        'secret': 'cisco',
+        'password': '',
+        'secret': '',
     }
 
     #Database table parameters
@@ -110,5 +105,5 @@ if __name__ == "__main__":
         "sh int trunk"
     ]]
 
-    config = typeVerification(sshRouterConfig,telnetRouterConfig)
+    config = typeVerification(routerConfig)
     configBackup(config)
