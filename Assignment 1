@@ -1,0 +1,114 @@
+from netmiko import (
+    ConnectHandler,
+    NetmikoTimeoutException,
+    NetmikoAuthenticationException,
+)
+import sqlite3
+import threading
+
+def typeVerification(sshRouterConfig,telnetRouterConfig):
+    #user input for connection type
+    connectionType = input("Do you want a secure connection? Y/N")
+
+    #ssh connection
+    if connectionType.upper()=='Y':
+        #connects to router
+        sshRouterConnect = ConnectHandler(**sshRouterConfig)
+        #enable mode
+        sshRouterConnect.enable()
+
+        #execute command and store into variable
+        config = sshRouterConnect.send_command('sh run')
+        return config
+
+    #telnet connection
+    elif connectionType.upper()=='N':
+        #connects to router
+        telnetRouterConnect = ConnectHandler(**telnetRouterConfig)
+        #enable mode
+        telnetRouterConnect.enable()
+
+        #execute command and store into variable
+        config = telnetRouterConnect.send_command('sh run')
+        return config
+
+    #erroneous inputs
+    else:
+        print('Invalid input')
+        typeVerification()
+
+def configBackup(config):
+    #write permissions to the text file
+    backup = open('config.txt','w+')
+    #writing the config backup to the text file
+    backup.write(config)
+
+    print('Backup of Router Configuration has been created successfully!')
+
+def db(tables):
+    con = sqlite3.connect('db.db')
+    cursor = con.cursor()
+
+    #loop to create database tables
+    for x in tables[0]:
+        cursor.execute(f'CREATE TABLE {tables[0][x]} IF NOT EXIST')
+        tableName = tables[0][x].split('(',1)
+        print(f'Database: Table {tableName} created successfully!')
+
+if __name__ == "__main__":
+    #router connection parameters
+    sshRouterConfig = {
+        'device_type': 'cisco_ios',
+        'host': '192.168.1.1',
+        'username': 'admin',
+        'password': 'password',
+        'port': 22,
+        'secret': 'cisco',
+    }
+
+    telnetRouterConfig = {
+        'device_type': 'cisco_ios_telnet',
+        'host': '192.168.1.1',
+        'username': 'admin',
+        'password': 'password',
+        'secret': 'cisco',
+    }
+
+    #Database table parameters
+    tables = [[
+        """Interfaces(
+
+        )""",
+        """Vlans(
+
+        )""",
+        """MACAddressTable(
+
+        )""",
+        """CDPNeighbors(
+
+        )""",
+        """VTP(
+
+        )""",
+        """Switchport(
+
+        )""",
+        """Trunk(
+
+        )"""
+    ]
+    #Cisco command corresponding to the different tables
+    [
+        "sh ip int br",
+        "sh vlans br",
+        "sh mac address-table",
+        "sh cdp neighbors",
+        "sh vtp status",
+        "sh vlan br",
+        "sh int switchport",
+        "sh int trunk"
+    ]]
+
+    config = typeVerification(sshRouterConfig,telnetRouterConfig)
+    configBackup(config)
