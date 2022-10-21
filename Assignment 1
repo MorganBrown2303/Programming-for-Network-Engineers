@@ -10,11 +10,15 @@ import getpass
 def typeVerification(routerConfig):
     #user input for connection type
     connectionType = input("Do you want a secure connection? Y/N")
+
+    #taking password and secret parameters from the user
     Config["password"] = getpass.getpass("Input password: ")
     Config["secret"] = getpass.getpass("Input secret: ")
+    
     #ssh connection
     if connectionType.upper()=='Y':
-        Config["port"] = 22
+        #setting device_type parameter for ssh
+        Config["device_type"] = 'cisco_ios'
 
         #connects to router
         sshRouterConnect = ConnectHandler(**sshRouterConfig)
@@ -22,18 +26,21 @@ def typeVerification(routerConfig):
         sshRouterConnect.enable()
 
         #execute command and store into variable
-        config = sshRouterConnect.send_command('sh run')
+        config = sshRouterConnect.send_command('sh run', use_textfsm=True)
         return config
 
     #telnet connection
     elif connectionType.upper()=='N':
+        #setting device_type parameter for telnet
+        Config["device_type"] = 'cisco_ios_telnet'
+
         #connects to router
         telnetRouterConnect = ConnectHandler(**telnetRouterConfig)
         #enable mode
         telnetRouterConnect.enable()
 
         #execute command and store into variable
-        config = telnetRouterConnect.send_command('sh run')
+        config = telnetRouterConnect.send_command('sh run', use_textfsm=True)
         return config
 
     #erroneous inputs
@@ -53,16 +60,29 @@ def db(tables):
     con = sqlite3.connect('db.db')
     cursor = con.cursor()
 
+    #creating the database
+    cursor.execute('CREATE DATABASE Router IF NOT EXIST;')
+
     #loop to create database tables
     for x in tables[0]:
-        cursor.execute(f'CREATE TABLE {tables[0][x]} IF NOT EXIST')
+        cursor.execute(f'CREATE TABLE {tables[0][x]} IF NOT EXIST;')
         tableName = tables[0][x].split('(',1)
         print(f'Database: Table {tableName} created successfully!')
+
+def userInformation():
+
+    interfaces = input('Do you want to view interfaces information? (Y/N)')
+
+    if interfaces.upper() == 'Y':
+        pass
+
+    elif interfaces.upper() == 'N':
+        pass
 
 if __name__ == "__main__":
     #router connection parameters
     routerConfig = {
-        'device_type': 'cisco_ios_telnet',
+        'device_type': '',
         'host': '192.168.1.1',
         'username': 'admin',
         'password': '',
@@ -71,26 +91,61 @@ if __name__ == "__main__":
 
     #Database table parameters
     tables = [[
-        """Interfaces(
-
+        """InterfacesBrief(
+            Interface VARCHAR(255),
+            IP VARCHAR(255),
+            Status VARCHAR(255),
+            Proto VARCHAR(255)
         )""",
         """Vlans(
-
+            Number INTEGAR,
+            Name VARCHAR(255),
+            Status VARCHAR(255),
+            Interfaces VARCHAR(255)
         )""",
         """MACAddressTable(
-
+            Vlan INTEGAR
+            MacAddress VARCHAR(255),
+            Type VARCHAR(255),
+            Ports VARCHAR(255)
         )""",
         """CDPNeighbors(
-
+            DeviceID VARCHAR(255),
+            LocalInterface VARCHAR(255),
+            Holdtime INTEGAR,
+            Capability VARCHAR(255),
+            Platform VARCHAR(255),
+            PortID VARCHAR(255),
         )""",
         """VTP(
-
+            VersionCapable VARCHAR(255),
+            VersionRunning VARCHAR(255),
+            DomainName VARCHAR(255),
+            PruningMode VARCHAR(255),
+            TrapsGeneration VARCHAR(255),
+            DeviceID VARCHAR(255),
+            LastModified VARCHAR(255),
+            OperatingMode VARCHAR(255),
+            MaxVlans INTEGAR,
+            ExistingVlans INTEGAR,
+            ConfigurationRevisions INTEGAR,
+            MD5Digest VARCHAR(255)
         )""",
-        """Switchport(
-
+        """InterfacesStatus(
+            Port VARCHAR(255),
+            Name VARCHAR(255),
+            Status VARCHAR(255),
+            Vlan INTEGAR,
+            Duplex VARCHAR(255),
+            Speed VARCHAR(255),
+            Type VARCHAR(255)
         )""",
         """Trunk(
-
+            Port VARCHAR(255),
+            Mode VARCHAR(255),
+            Encapsulation VARCHAR(255),
+            Status VARCHAR(255),
+            NativeVlan VARCHAR(255)
         )"""
     ]
     #Cisco command corresponding to the different tables
@@ -100,8 +155,7 @@ if __name__ == "__main__":
         "sh mac address-table",
         "sh cdp neighbors",
         "sh vtp status",
-        "sh vlan br",
-        "sh int switchport",
+        "sh int status",
         "sh int trunk"
     ]]
 
