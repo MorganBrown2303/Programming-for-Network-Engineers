@@ -56,12 +56,12 @@ def configBackup(config):
 
     print('Backup of Router Configuration has been created successfully!')
 
-def db(tables):
+def db(tables,host):
     con = sqlite3.connect('db.db')
     cursor = con.cursor()
 
     #creating the database
-    cursor.execute('CREATE DATABASE Router IF NOT EXIST;')
+    cursor.execute(f'CREATE DATABASE {host} IF NOT EXIST;')
 
     #loop to create database tables
     for x in tables[0]:
