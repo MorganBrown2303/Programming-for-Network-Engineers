@@ -90,7 +90,7 @@ if __name__ == "__main__":
     }
 
     #Database table parameters
-    tables = [[
+    tables = ((
         """InterfacesBrief(
             Interface VARCHAR(255),
             IP VARCHAR(255),
@@ -147,9 +147,9 @@ if __name__ == "__main__":
             Status VARCHAR(255),
             NativeVlan VARCHAR(255)
         )"""
-    ]
+    ),
     #Cisco command corresponding to the different tables
-    [
+    (
         "sh ip int br",
         "sh vlans br",
         "sh mac address-table",
@@ -157,7 +157,7 @@ if __name__ == "__main__":
         "sh vtp status",
         "sh int status",
         "sh int trunk"
-    ]]
+    ))
 
     config = typeVerification(routerConfig)
     configBackup(config)
