@@ -12,16 +12,16 @@ def typeVerification(routerConfig):
     connectionType = input("Do you want a secure connection? Y/N")
 
     #taking password and secret parameters from the user
-    Config["password"] = getpass.getpass("Input password: ")
-    Config["secret"] = getpass.getpass("Input secret: ")
+    routerConfig["password"] = getpass.getpass("Input password: ")
+    routerConfig["secret"] = getpass.getpass("Input secret: ")
     
     #ssh connection
     if connectionType.upper()=='Y':
         #setting device_type parameter for ssh
-        Config["device_type"] = 'cisco_ios'
+        routerConfig["device_type"] = 'cisco_ios'
 
         #connects to router
-        sshRouterConnect = ConnectHandler(**sshRouterConfig)
+        sshRouterConnect = ConnectHandler(**routerConfig)
         #enable mode
         sshRouterConnect.enable()
 
@@ -32,10 +32,10 @@ def typeVerification(routerConfig):
     #telnet connection
     elif connectionType.upper()=='N':
         #setting device_type parameter for telnet
-        Config["device_type"] = 'cisco_ios_telnet'
+        routerConfig["device_type"] = 'cisco_ios_telnet'
 
         #connects to router
-        telnetRouterConnect = ConnectHandler(**telnetRouterConfig)
+        telnetRouterConnect = ConnectHandler(**routerConfig)
         #enable mode
         telnetRouterConnect.enable()
 
