@@ -91,13 +91,15 @@ def db(tables,host):
     cursor.execute(f'CREATE DATABASE {host} IF NOT EXIST;')
     cursor.extcute(f'USE {host}')
 
-def tableThreading():
+    tableThreading(con,cursor)
+
+def tableThreading(con,cursor):
     #threading conditions
     for x in range(0,6,3):
         stop = n + 3 if n + 3 <= 6 else 6
         threading.thread(target=createTable, arg=(n,stop)).start()
 
-    fillDatabase(tables[1])
+    fillDatabase(tables[1],routerConfig,con,cursor)
 
 def createTable(tables,host):
     #loop to create database tables
@@ -106,24 +108,38 @@ def createTable(tables,host):
         tableName = tables[0][x].split('(',1)
         print(f'Database: Table {tableName} created successfully!')
 
-def fillDatabase(commands):
+def fillDatabase(commands,routerConfig,con,cursor):
     commands.remove('sh run')
+    sshRouterConnect = ConnectHandler(**routerConfig)
+    sshRouterConnect.enable()
 
     for x in commands:
         if x == 0:
-            pass
+            config = sshRouterConnect.send_command(commands[x], use_textfsm=True)
+
+            intBrief = config.split()
+
+            for x in range(0,7):
+                intBrief.pop(0)
+
+            rows = len(intBrief)/4
+
+            while x <= rows:
+                cursor.execute(f'''INSERT INTO InterfacesBrief (Interface,IP,Status,Proto)
+                 VALUES ({intBrief[1*rows]},{intBrief[1*rows+1]},{intBrief[1*rows+2]},{intBrief[1*rows+3]});''')
+
         elif x == 1:
-            pass
+            config = sshRouterConnect.send_command(commands[x], use_textfsm=True)
         elif x == 2:
-            pass
+            config = sshRouterConnect.send_command(commands[x], use_textfsm=True)
         elif x == 3:
-            pass
+            config = sshRouterConnect.send_command(commands[x], use_textfsm=True)
         elif x == 4:
-            pass
+            config = sshRouterConnect.send_command(commands[x], use_textfsm=True)
         elif x == 5:
-            pass
+            config = sshRouterConnect.send_command(commands[x], use_textfsm=True)
         elif x == 6:
-            pass
+            config = sshRouterConnect.send_command(commands[x], use_textfsm=True)
         else:
             print('ERROR: Index Out of Range')
 
