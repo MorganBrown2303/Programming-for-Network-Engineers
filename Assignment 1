@@ -10,7 +10,7 @@ import time
 
 def typeVerification(routerConfig,commands):
     #user input for connection type
-    connectionType = input("Do you want a secure connection? Y/N")
+    connectionType = input("Do you want a secure connection?(Y/N) ")
 
     #taking password and secret parameters from the user
     routerConfig["password"] = getpass.getpass("Input password: ")
@@ -84,29 +84,19 @@ def dbBackup():
     
 
 def db(tables,host):
-    con = sqlite3.connect('db.db')
+    #creating the database
+    con = sqlite3.connect(f'{host}.db')
     cursor = con.cursor()
 
-    #creating the database
-    cursor.execute(f'CREATE DATABASE {host} IF NOT EXIST;')
-    cursor.extcute(f'USE {host}')
+    createTable(con,cursor,tables, host)
 
-    tableThreading(con,cursor)
 
-def tableThreading(con,cursor):
-    #threading conditions
-    for x in range(0,6,3):
-        stop = n + 3 if n + 3 <= 6 else 6
-        threading.thread(target=createTable, arg=(n,stop)).start()
+def createTable(con,cursor,tables,host):
+    #create database table
+        cursor.execute(f'CREATE TABLE {tables[0]} IF NOT EXIST;')
+        print(f'Database created successfully!')
 
-    fillDatabase(tables[1],routerConfig,con,cursor)
-
-def createTable(tables,host):
-    #loop to create database tables
-    for x in range(start,stop):
-        cursor.execute(f'CREATE TABLE {tables[0][x]} IF NOT EXIST;')
-        tableName = tables[0][x].split('(',1)
-        print(f'Database: Table {tableName} created successfully!')
+        fillDatabase(tables[1],routerConfig,con,cursor)
 
 def fillDatabase(commands,routerConfig,con,cursor):
     commands.remove('sh run')
@@ -116,17 +106,6 @@ def fillDatabase(commands,routerConfig,con,cursor):
     for x in commands:
         if x == 0:
             config = sshRouterConnect.send_command(commands[x], use_textfsm=True)
-
-            intBrief = config.split()
-
-            for x in range(0,7):
-                intBrief.pop(0)
-
-            rows = len(intBrief)/4
-
-            while x <= rows:
-                cursor.execute(f'''INSERT INTO InterfacesBrief (Interface,IP,Status,Proto)
-                 VALUES ({intBrief[1*rows]},{intBrief[1*rows+1]},{intBrief[1*rows+2]},{intBrief[1*rows+3]});''')
 
         elif x == 1:
             config = sshRouterConnect.send_command(commands[x], use_textfsm=True)
@@ -327,69 +306,23 @@ if __name__ == "__main__":
     routerConfig = {
         'device_type': '',
         'host': '192.168.1.1',
-        'username': 'admin',
+        'username': 'cisco',
         'password': '',
         'secret': '',
     }
 
     #Database table parameters
     tables = ((
-        """InterfacesBrief(
-            Interface VARCHAR(255),
-            IP VARCHAR(255),
-            Status VARCHAR(255),
-            Proto VARCHAR(255)
-        )""",
-        """Vlans(
-            Number INTEGAR,
-            Name VARCHAR(255),
-            Status VARCHAR(255),
-            Interfaces VARCHAR(255)
-        )""",
-        """MACAddressTable(
-            Vlan INTEGAR
-            MacAddress VARCHAR(255),
-            Type VARCHAR(255),
-            Ports VARCHAR(255)
-        )""",
-        """CDPNeighbors(
-            DeviceID VARCHAR(255),
-            LocalInterface VARCHAR(255),
-            Holdtime INTEGAR,
-            Capability VARCHAR(255),
-            Platform VARCHAR(255),
-            PortID VARCHAR(255),
-        )""",
-        """VTP(
-            VersionCapable VARCHAR(255),
-            VersionRunning VARCHAR(255),
-            DomainName VARCHAR(255),
-            PruningMode VARCHAR(255),
-            TrapsGeneration VARCHAR(255),
-            DeviceID VARCHAR(255),
-            LastModified VARCHAR(255),
-            OperatingMode VARCHAR(255),
-            MaxVlans INTEGAR,
-            ExistingVlans INTEGAR,
-            ConfigurationRevisions INTEGAR,
-            MD5Digest VARCHAR(255)
-        )""",
-        """InterfacesStatus(
-            Port VARCHAR(255),
-            Name VARCHAR(255),
-            Status VARCHAR(255),
-            Vlan INTEGAR,
-            Duplex VARCHAR(255),
-            Speed VARCHAR(255),
-            Type VARCHAR(255)
-        )""",
-        """Trunk(
-            Port VARCHAR(255),
-            Mode VARCHAR(255),
-            Encapsulation VARCHAR(255),
-            Status VARCHAR(255),
-            NativeVlan VARCHAR(255)
-        )"""
+        """Commands(
+            brief VARCHAR(255),
+            vlans VARCHAR(255),
+            macAddressTable VARCHAR(255),
+            cdp VARCHAR(255),
+            vtp VARCHAR(255),
+            status VARCHAR(255),
+            trunk VARCHAR(255),
+        )
+        """
     ),
     #Cisco command corresponding to the different tables
     (
